@@ -1,0 +1,128 @@
+---
+title: "movie"
+author: "Jakob"
+date: "9/12/2020"
+output:
+  word_document: default
+  html_document: default
+---
+#loading libaries
+```{r}
+library(tidyverse)
+library(lubridate)
+library(ggplot2)
+install.packages("dplyr")
+library(dplyr)
+```
+
+
+#loading data
+```{r}
+movie <- read_csv("data/tmdb_5000_movies.csv")
+```
+
+```{r}
+credits <- read_csv("data/tmdb_5000_credits.csv")
+```
+#cleaning data
+```{r}
+movie %>% 
+  mutate(release_year = year(release_date)) %>% 
+  mutate(release_month = month(release_date)) -> movie
+```
+
+Udregning af pris per minut 
+
+```{r}
+movie %>% 
+  mutate(price_minute = budget / runtime) -> movie
+```
+
+
+#analasis
+
+```{r}
+movie %>% 
+  count(release_year) %>% 
+  ggplot()+
+  geom_line(mapping = aes(x = release_year, y = n))
+```
+```{r}
+movie %>% 
+  count(release_year, sort = TRUE) %>% 
+  ggplot()+
+  geom_col(mapping = aes(x = release_year, y = n))
+```
+```{r}
+movie %>%
+  filter(runtime != 0) %>% 
+  arrange(desc(price_minute)) %>% 
+  top_n(15) %>% 
+  mutate(title = reorder(title, price_minute)) %>%
+  ggplot(aes(x = title, y = price_minute)) +
+  geom_col() +
+  xlab(NULL) +
+  coord_flip() +
+      labs(x = "Count",
+      y = "Price per minute",
+      title = "Movies")
+ 
+```
+#Budget ANALASYS
+```{r} 
+movie %>% 
+select(budget, release_year)
+```
+
+In order to visualize this, i will plot it:
+
+```{r}
+ggplot(movie, aes(x=release_year, y=budget)) +
+  geom_point(position = "jitter")
+options(scipen = 999)
+
+```
+```{r}
+ggplot(movie, aes(x=release_year, y=budget)) +
+  geom_bin2d(bindwidth = c(2.5, .2))
+options(scipen = 999)
+```
+```{r}
+
+```
+
+#Budgets and average vote
+```{r}
+ggplot(movie, aes(x=budget, y=vote_average)) +
+  geom_bin2d(bindwidth = c(2.5, .2))
+options(scipen = 999)
+```
+
+#Average vote and runtime
+
+```{r}
+ggplot(movie, aes(x=runtime, y=vote_average)) +
+  geom_bin2d(bindwidth = c(2.5, .2))
+options(scipen = 999)
+```
+
+
+
+#Regression 1
+```{r}
+reg2 <- lm(vote_average ~ release_year, data=movie)
+
+Coefficients:
+ (Intercept)  release_year  
+    44.24321      -0.01905 
+```
+
+
+#slå videnskabelig notation fra:
+```{r}
+options(scipen = 999)
+```
+
+
+
+ 
